@@ -1,0 +1,27 @@
+Training a neural network for predicting optimal choices in Yahtzee is an interesting challenge. Here are some features you could consider:
+
+1. **Current Dice Roll**: The values of the five dice currently rolled. This is the most basic and crucial feature.
+
+2. **Roll Number**: Whether it's the first, second, or third roll in a turn. The strategy might change based on how many rolls are left.
+
+3. **Scorecard State**: The current state of the scorecard, including which categories have been filled and the scores in each. This helps the model understand which options are still available.
+
+4. **Potential Scores**: The possible scores for each category based on the current dice roll. This could be pre-calculated for the model.
+
+5. **Probability of Each Category**: The likelihood of achieving a specific combination given the current dice and the number of rolls left.
+
+6. **Upper Section Score**: The current total score in the upper section, as achieving a total of 63 or more yields a bonus.
+
+7. **Current Total Score**: The player's total score at the current moment.
+
+8. **Opponent's Scorecard State** (if applicable): In a multi-player game, knowing the opponent's scorecard might influence the strategy.
+
+9. **Turn Number**: Which turn of the game it is, as strategies might shift in the later stages of the game.
+
+10. **Previous Rolls in the Turn**: If it's not the first roll in a turn, the values from previous rolls in the same turn could be informative.
+
+11. **Historical Data**: Past game data, if available, could be used to train the model on common strategies and outcomes.
+
+12. **Expected Value Calculations**: For each category, based on the current roll and potential re-rolls.
+
+When training your model, you'll want to ensure that it learns not just to maximize the score for the current turn, but also to strategize for maximizing the total score over the course of a game. This might involve sacrificing a higher score in one turn for potential greater gains in future turns.
