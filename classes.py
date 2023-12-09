@@ -33,7 +33,7 @@ class TurnData:
         return self.__dict__
     
 class ScoreSheet:
-    def __init__(self, player_name = None, scores = None, score_types = None, total = 0, ):
+    def __init__(self, player_name = None, scores = None, score_types = None, total = 0):
         self.player_name = player_name
         self.total = 0
 
@@ -44,6 +44,18 @@ class ScoreSheet:
             [x if x != None else -1 for x in self.scores.values()]
         ))
         return current_scores
+    
+    def get_potential_scores(self, hand):    
+        potential_scores = {}
+        for score_type, score in zip(self.score_types, self.scores.items()):
+            if score_type.check_condition(hand) and score[1] == None:
+                value = score_type.calculate_score(hand)
+            elif score[1] != None:
+                value = -1
+            else:
+                value = 0
+            potential_scores[score_type.name] = value
+        return potential_scores
 
     # update the scores attribute with the score score / type
     def mark_score(self, chosen_score_type, chosen_score):
