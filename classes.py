@@ -19,16 +19,15 @@ class ScoreType:
     
 class TurnData:
     def __init__(
-            self, game, turn, pre_total_score,  
-            hand_1 = None, dice_picks_1 = None, 
-            hand_2 = None, dice_picks_2 = None, 
-            hand_3 = None, chosen_score_type = None,
-            turn_score = None, post_total_score = None
+        self, game, turn, pre_total_score,  
+        # hand_1 = None, dice_picks_1 = None, 
+        # hand_2 = None, dice_picks_2 = None, 
+        # hand_3 = None, chosen_score_type = None,
+        # turn_score = None, post_total_score = None
     ):
         self.game = game
         self.turn = turn
         self.pre_total_score = pre_total_score
-        # self.turn_score = turn_score
 
     def capture_data(self):
         return self.__dict__
@@ -37,6 +36,19 @@ class ScoreSheet:
     def __init__(self, player_name = None, scores = None, score_types = None, total = 0, ):
         self.player_name = player_name
         self.total = 0
+
+    # get current scores ? and probabilities?
+    def get_current_scores(self):
+        current_scores = dict(zip(
+            [f'{x}_score' for x in self.scores.keys()],
+            [x if x != None else -1 for x in self.scores.values()]
+        ))
+        return current_scores
+
+    # update the scores attribute with the score score / type
+    def mark_score(self, chosen_score_type, chosen_score):
+        self.scores[chosen_score_type] = chosen_score
+        self.total += chosen_score
 
     # establish each score type
     def initialize_score_types(self):
@@ -141,8 +153,3 @@ class ScoreSheet:
             [type.name for type in score_types],
             [None] * len(score_types)
         ))
-    
-    # update the scores attribute with the score score / type
-    def mark_score(self, chosen_score_type, chosen_score):
-        self.scores[chosen_score_type] = chosen_score
-        self.total += chosen_score

@@ -3,16 +3,18 @@ import numpy as np
 from classes import ScoreSheet, TurnData
 
 # dice decision functions
-def pick_random_dice(idx, die, hand, keepers):
-    return np.random.choice([0,1])
+def pick_random_dice(hand):
+    return np.random.choice([0,1], size = 5)
 
-def pick_frequent_dice(idx, die, hand, keepers):
-    rest_of_hand = np.delete(hand, idx)
-    if die in rest_of_hand or die in keepers:
-        choice = 1
-    else:
-        choice = 0
-    return choice    
+def pick_frequent_dice(hand):
+    dice_picks = []
+    for idx, die in enumerate(hand):
+        rest_of_hand = np.delete(hand, idx)
+        if die in rest_of_hand:
+            dice_picks.append(1)
+        else:
+            dice_picks.append(0)
+    return dice_picks    
 
 # score decision functions
 def pick_random_score(potential_scores):
@@ -24,20 +26,13 @@ def pick_max_score(potential_scores):
     return max(potential_scores, key = potential_scores.get)
 
 # picking dice and scores
-def pick_dice(hand, decision_function):
-    dice_picks = []
-    keepers = []
-    
-    for idx, die in enumerate(hand):
-        choice = decision_function(idx, die, hand, keepers)
-        dice_picks.append(choice)
-        if choice == 1:
-            keepers.append(die)
-    
+def pick_dice(hand, decision_function, **kwargs):
+    dice_picks = decision_function(hand, **kwargs)
+    keepers = hand[np.array(dice_picks, dtype = bool)]
     return dice_picks, keepers
 
-def pick_score(potential_scores, decision_function):
-    chosen_score_type = decision_function(potential_scores)
+def pick_score(potential_scores, decision_function, **kwargs):
+    chosen_score_type = decision_function(potential_scores, **kwargs)
     turn_score = potential_scores[chosen_score_type]
     return chosen_score_type, turn_score
 
@@ -50,7 +45,6 @@ def simulate_game(game_number, dice_decision_function, score_decision_function):
     game_data = []
 
     # instantiate a new score sheet and game variables
-    # total_score = 0
     score_sheet = ScoreSheet()
     score_sheet.initialize_score_types()
 
@@ -93,7 +87,6 @@ def simulate_game(game_number, dice_decision_function, score_decision_function):
         turn.chosen_score_type, turn.turn_score = pick_score(potential_scores, score_decision_function)
 
         # mark score
-        # total_score += turn.turn_score
         score_sheet.mark_score(turn.chosen_score_type, turn.turn_score)
         turn.post_total_score = score_sheet.total
 
