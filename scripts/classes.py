@@ -1,5 +1,10 @@
 import numpy as np
 
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from torch.utils.data import Dataset
+
 # define class
 class ScoreType:
     def __init__(self, name, condition_function, scoring_function):
@@ -18,13 +23,7 @@ class ScoreType:
         return self.scoring_function(hand)
     
 class TurnData:
-    def __init__(
-        self, game, turn, pre_total_score,  
-        # hand_1 = None, dice_picks_1 = None, 
-        # hand_2 = None, dice_picks_2 = None, 
-        # hand_3 = None, chosen_score_type = None,
-        # turn_score = None, post_total_score = None
-    ):
+    def __init__(self, game, turn, pre_total_score):
         self.game = game
         self.turn = turn
         self.pre_total_score = pre_total_score
@@ -165,3 +164,71 @@ class ScoreSheet:
             [type.name for type in score_types],
             [None] * len(score_types)
         ))
+
+
+class Botzee(nn.Module):
+    def __init__(self, input_sizes, lstm_sizes, dice_output_size, score_output_size, masks):
+        super(Botzee, self).__init__()
+        self.input_sizes = input_sizes
+        self.lstm_sizes = lstm_sizes
+        self.dice_output_size = dice_output_size
+        self.score_output_size = score_output_size
+        self.masks = masks
+
+        # branch 1 - binary dice pick 1
+        self.lstm1 = nn.LSTM(input_sizes[0], lstm_sizes[0])
+        self.fc1 = nn.Linear(lstm_sizes[0], lstm_sizes[0])
+        self.branch1 = nn.Linear(lstm_sizes[0], dice_output_size)
+
+        # branch 2 - binary dice pick 2
+        self.lstm2 = nn.LSTM(input_sizes[1], lstm_sizes[1])
+        self.fc2 = nn.Linear(lstm_sizes[1], lstm_sizes[1])
+        self.branch2 = nn.Linear(lstm_sizes[1], dice_output_size)
+
+        # branch 3 - multilabel score pick
+        self.lstm3 = nn.LSTM(input_sizes[2], lstm_sizes[2])
+        self.fc3 = nn.Linear(lstm_sizes[2], lstm_sizes[2])
+        self.branch3 = nn.Linear(lstm_sizes[2], score_output_size)
+
+    def forward(self, x):
+        # in case of 2D input, add a batch dimension
+        if x.dim() == 1:
+            x = x.unsqueeze(0)
+        
+        # branch 1 - binary
+        out1, _ = self.lstm1(x[:, self.masks[0]])
+        out1 = F.relu(self.fc1(out1))
+        out1 = self.branch1(out1)
+        dice1_output = torch.sigmoid(out1)
+
+        # branch 2 - binary
+        out2, _ = self.lstm2(x[:, self.masks[1]])
+        out2 = F.relu(self.fc2(out2))
+        out2 = self.branch2(out2)
+        dice2_output = torch.sigmoid(out2)
+
+        # branch 3 - multilabel
+        out3, _ = self.lstm3(x)
+        out3 = F.relu(self.fc3(out3))
+        out3 = self.branch3(out3)
+        score_output = F.softmax(out3, dim = 1)
+
+        return dice1_output, dice2_output, score_output
+    
+class BotzeeDataset(Dataset):
+    def __init__(self, features, targets_branch1, targets_branch2, targets_branch3):
+        self.features = features
+        self.targets_branch1 = targets_branch1
+        self.targets_branch2 = targets_branch2
+        self.targets_branch3 = targets_branch3
+
+    def __len__(self):
+        return len(self.features)
+
+    def __getitem__(self, idx):
+        # Convert to tensors
+        x = torch.tensor(self.features.iloc[idx, :].values, dtype=torch.float32)
+        y1 = torch.tensor(self.targets_branch1.iloc[idx, :].values, dtype = torch.float32)
+        y2 = torch.tensor(self.targets_branch2.iloc[idx, :].values, dtype = torch.float32)
+        y3 = torch.tensor(self.targets_branch3.iloc[idx, :].values, dtype = torch.float32)
+        return x, (y1, y2, y3)
