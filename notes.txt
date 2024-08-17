@@ -1,0 +1,13 @@
+Key Hyperparameters
+Gamma (𝛾 γ): Discount factor for future rewards.
+Tau (𝜏 τ): Parameter for soft updates of the target network.
+Epsilon (𝜖 ϵ): Controls exploration vs. exploitation.
+Learning Rate (𝛼 α): Step size for updating network weights.
+Batch Size: Number of samples per training batch.
+Buffer Size: Capacity of the replay buffer.
+Update Frequency: Frequency of updating the target network.
+
+Optimization Methods
+Random Search: Randomly sample hyperparameter values within specified ranges and evaluate performance. This can be more efficient than grid search, especially when some hyperparameters have less impact than others.
+Grid Search: Exhaustively search over a specified set of hyperparameter values. This is more systematic but can be computationally expensive.
+Bayesian Optimization: Use probabilistic models to find the optimal hyperparameters more efficiently by focusing on promising regions of the hyperparameter space.
